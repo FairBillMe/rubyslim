@@ -1,10 +1,9 @@
 #!/usr/bin/env ruby
 
-$:.unshift(File.expand_path(File.dirname(__FILE__) + "/../lib/"))
+$LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__) + '/../lib/'))
 
 require 'rubyslim/ruby_slim'
 
 port = ARGV[0].to_i
-rubySlim = RubySlim.new
-rubySlim.run(port)
-
+ruby_slim = RubySlim.new
+ruby_slim.run(port)

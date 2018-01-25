@@ -7,7 +7,7 @@ class RubySlim
   def run(port)
     @connected = true
     @executor = ListExecutor.new
-    socket_service = SocketService.new()
+    socket_service = SocketService.new
     socket_service.serve(port) do |socket|
       serve_ruby_slim(socket)
     end
@@ -32,25 +32,27 @@ class RubySlim
   #   Call: [<id>, call, <instance>, <function>, <arg>...]
   #   CallAndAssign: [<id>, callAndAssign, <symbol>, <instance>, <function>, <arg>...]
   #
-  # (from http://fitnesse.org/FitNesse.UserGuide.SliM.SlimProtocol)
+  # (from http://fitnesse.org/FitNesse.UserGuide.WritingAcceptanceTests.SliM.SlimProtocol)
   #
-  def serve_ruby_slim(socket)
-    socket.puts("Slim -- V0.3");
+  def serve_ruby_slim(client)
+    client.puts('Slim -- V0.3')
     said_bye = false
 
-    while !said_bye
-      length = socket.read(6).to_i   # <length>
-      socket.read(1)                 # :
-      command = socket.read(length)  # <command>
+    until said_bye
+      length = client.read(6).to_i   # <length>
+      client.puts length
+      client.read(1)                 # :
+      command = client.read(length)  # <command>
+      client.puts command
 
       # Until a 'bye' command is received, deserialize the command, execute the
-      # instructions, and write a serialized response back to the socket.
-      if command.downcase != "bye"
-        instructions = ListDeserializer.deserialize(command);
+      # instructions, and write a serialized response back to the client.
+      if command.downcase != 'bye'
+        instructions = ListDeserializer.deserialize(command)
         results = @executor.execute(instructions)
-        response = ListSerializer.serialize(results);
-        socket.write(sprintf("%06d:%s", response.length, response))
-        socket.flush
+        response = ListSerializer.serialize(results)
+        client.write(format('%06d:%s', response.length, response))
+        client.flush
       else
         said_bye = true
       end

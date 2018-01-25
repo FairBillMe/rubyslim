@@ -21,7 +21,7 @@ class SocketServiceTest < Test::Unit::TestCase
     10.times {connect(@port)}
     @ss.close()
     assert_equal(10, @connections)
-    assert_equal(0, @ss.pendingSessions)
+    assert_equal(0, @ss.pending_sessions)
   end
 
   def testSocketSend
@@ -82,11 +82,11 @@ class SocketServiceTest < Test::Unit::TestCase
     s1 = nil;
     Thread.start {s1 = TCPSocket.open("localhost", @port)}
     sleep(0.2)
-    assert_equal(1, @ss.pendingSessions);
+    assert_equal(1, @ss.pending_sessions);
     s1.write("testSessionCount");
     s1.close
     sleep(0.2)
-    assert_equal(0, @ss.pendingSessions)
+    assert_equal(0, @ss.pending_sessions)
     @ss.close
   end
 

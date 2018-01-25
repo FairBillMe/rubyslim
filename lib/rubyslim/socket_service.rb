@@ -1,53 +1,50 @@
 require 'socket'
 require 'thread'
 
-
 class SocketService
 
   attr_reader :closed
 
-  def initialize()
-    @ropeSocket = nil
+  def initialize
+    @server = nil
     @group = ThreadGroup.new
-    @serviceThread = nil
+    @service_thread = nil
   end
 
   def serve(port, &action)
     @closed = false
     @action = action
-    @ropeSocket = TCPServer.open(port)
-    @serviceThread = Thread.start {serviceTask}
-    @group.add(@serviceThread)
+    @server = TCPServer.new 9999
+    @service_thread = service_task
+    @group.add(@service_thread)
   end
 
-  def pendingSessions
-    @group.list.size - ((@serviceThread != nil) ? 1 : 0)
+  def pending_sessions
+    @group.list.size - (!@service_thread.nil? ? 1 : 0)
   end
 
-  def serviceTask
-    while true
-      Thread.start(@ropeSocket.accept) do |s|
-        serverTask(s)
+  def service_task
+    loop do
+      Thread.start(@server.accept) do |client|
+        server_task(client)
       end
     end
   end
 
-  def serverTask(s)
-    @action.call(s)
-    s.close
+  def server_task(client)
+    @action.call(client)
+    client.close
   end
 
   def close
-    @serviceThread.kill
-    @serviceThread = nil
-    @ropeSocket.close
-    waitForServers
+    @service_thread.kill
+    @service_thread = nil
+    @server.close
+    wait_for_servers
     @closed = true
   end
 
-  def waitForServers
-    @group.list.each do |t|
-      t.join
-    end
+  def wait_for_servers
+    @group.list(&:join)
   end
 end
